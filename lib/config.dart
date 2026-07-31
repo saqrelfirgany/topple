@@ -48,6 +48,9 @@ class Cfg {
   // screen shake (world units), decays each frame
   static const double shakeOnKnock = 0.35;
 
+  // min seconds between "hit" sounds, so a whole tower toppling isn't a wall of noise
+  static const double hitCooldown = 0.07;
+
   // aiming trajectory preview
   static const int trajectoryDots = 20;
   static const double trajectoryStep = 0.055; // seconds between preview samples
@@ -60,10 +63,11 @@ class Cfg {
   static const Color targetColor = Color(0xFFFFC46B);
   static const Color ballColor = Color(0xFF54C5F8);
   static const int particlesPerKnock = 14; // debris when a block topples
-  static final Paint groundPaint = Paint()..color = const Color(0xFF35507A);
-  static final Paint blockPaint = Paint()..color = blockColor;
-  static final Paint targetPaint = Paint()..color = targetColor;
-  static final Paint ballPaint = Paint()..color = ballColor;
+  static const Color grassColor = Color(0xFF3E8E5A);
+  static const Color dirtColor = Color(0xFF223146);
+  static const Color blockHighlight = Color(0x30FFFFFF);
+  static const Color ballShine = Color(0x70FFFFFF);
+  static const double blockRadius = 0.15;
   static final Paint aimDotPaint = Paint()..color = const Color(0xB3FFFFFF);
   static final Paint bandPaint = Paint()
     ..color = const Color(0xFFFFC46B)

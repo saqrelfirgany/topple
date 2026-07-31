@@ -30,6 +30,27 @@ class ToppleHud extends StatelessWidget {
                 ],
               ),
             ),
+            Positioned(
+              bottom: 16,
+              right: 16,
+              child: GestureDetector(
+                onTap: game.toggleMute,
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Color(0x99000000),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      s.muted ? '🔇' : '🔊',
+                      style: const TextStyle(fontSize: 19),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             if (s.phase == Phase.aiming)
               const Positioned(
                 bottom: 22,

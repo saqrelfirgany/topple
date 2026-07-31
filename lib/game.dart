@@ -5,6 +5,7 @@ import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/foundation.dart';
 
+import 'audio.dart';
 import 'components/block.dart';
 import 'components/ground.dart';
 import 'components/particles.dart';
@@ -24,6 +25,7 @@ class HudState {
     required this.targetsLeft,
     required this.phase,
     this.stars = 0,
+    this.muted = false,
   });
   final int level;
   final int shotsLeft;
@@ -31,6 +33,7 @@ class HudState {
   final int targetsLeft;
   final Phase phase;
   final int stars;
+  final bool muted;
 }
 
 class ToppleGame extends Forge2DGame with DragCallbacks {
@@ -62,6 +65,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
 
   double _flyTime = 0;
   double _shake = 0;
+  double _hitCd = 0;
   final Set<Block> _knockedSet = {};
 
   Vector2? _dragStart; // canvas px
@@ -78,12 +82,13 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     world.add(_slingshot);
     _fx = Fx();
     world.add(_fx);
+    Sfx.preload();
     _loadLevel(0);
   }
 
   @override
   void render(Canvas canvas) {
-    // sky gradient behind everything (drawn in screen space, before the world)
+    // sky gradient behind everything (screen space, before the world)
     final rect = Offset.zero & Size(size.x, size.y);
     canvas.drawRect(
       rect,
@@ -94,6 +99,17 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
           const [Cfg.skyTop, Cfg.skyBottom],
         ),
     );
+    // soft parallax clouds, screen space, behind the world
+    final cloud = Paint()..color = const Color(0x12FFFFFF);
+    canvas.drawOval(
+        Rect.fromLTWH(size.x * 0.10, size.y * 0.12, size.x * 0.17, size.y * 0.06),
+        cloud);
+    canvas.drawOval(
+        Rect.fromLTWH(size.x * 0.60, size.y * 0.08, size.x * 0.22, size.y * 0.07),
+        cloud);
+    canvas.drawOval(
+        Rect.fromLTWH(size.x * 0.40, size.y * 0.20, size.x * 0.13, size.y * 0.05),
+        cloud);
     super.render(canvas);
   }
 
@@ -158,28 +174,41 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
       targetsLeft: _targetsLeft,
       phase: _phase,
       stars: _stars,
+      muted: Sfx.muted,
     );
   }
 
-  void _awardStars() => _stars = math.max(1, math.min(3, _ammo - _ballsUsed + 1));
+  void _awardStars() =>
+      _stars = math.max(1, math.min(3, _ammo - _ballsUsed + 1));
+
+  void toggleMute() {
+    Sfx.muted = !Sfx.muted;
+    _pushHud();
+  }
 
   // ---- per-frame -------------------------------------------------------------
 
   @override
   void update(double dt) {
     super.update(dt);
+    if (_hitCd > 0) _hitCd -= dt;
 
-    // debris + shake + HUD refresh whenever a block newly topples
+    // debris + shake + hit sound + HUD refresh whenever a block newly topples
     var newlyKnocked = false;
     for (final b in _blocks) {
       if (b.knocked && !_knockedSet.contains(b)) {
         _knockedSet.add(b);
-        _fx.burst(b.body.position, b.isTarget ? Cfg.targetColor : Cfg.blockColor);
+        _fx.burst(
+            b.body.position, b.isTarget ? Cfg.targetColor : Cfg.blockColor);
         newlyKnocked = true;
       }
     }
     if (newlyKnocked) {
       _shake = Cfg.shakeOnKnock;
+      if (_hitCd <= 0) {
+        Sfx.hit();
+        _hitCd = Cfg.hitCooldown;
+      }
       _pushHud();
     }
     _applyShake(dt);
@@ -198,6 +227,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     if (_targetsLeft == 0) {
       _awardStars();
       _phase = Phase.won;
+      Sfx.win();
       _pushHud();
       return;
     }
@@ -215,8 +245,10 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     if (_targetsLeft == 0) {
       _awardStars();
       _phase = Phase.won;
+      Sfx.win();
     } else if (_shotsLeft <= 0) {
       _phase = Phase.lost;
+      Sfx.lose();
     } else {
       _phase = Phase.aiming;
       _spawnBall();
@@ -274,6 +306,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     final ball = _ball;
     if (ball == null || !ball.isMounted) return;
     ball.launch(vel * ball.body.mass); // impulse = mass * velocity
+    Sfx.launch();
     _ballsUsed++;
     _phase = Phase.flying;
     _flyTime = 0;
