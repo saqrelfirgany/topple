@@ -12,7 +12,11 @@
 
 ## Verify the API before writing (it moves)
 
-flame_forge2d 0.19.3 / forge2d 0.14.2 modern surface: `Forge2DGame(gravity:)` has a built-in `camera` (`camera.viewfinder.zoom`); `BodyComponent.createBody()` -> `world.createBody(BodyDef(type:, position:, userData:, bullet:))..createFixture(FixtureDef(shape, density:, friction:, restitution:))`; shapes `EdgeShape()..set(a,b)`, `PolygonShape()..setAsBox(hx,hy,center,angle)`, `CircleShape()..radius`; launch with `body.applyLinearImpulse(Vector2)`; collisions via `with ContactCallbacks` + `beginContact(Object other, Contact c)` (needs `userData` set); input via `DragCallbacks` — note `DragEndEvent` has NO position, so track the latest `canvasPosition` in `onDragUpdate`.
+flame_forge2d 0.19.3 / forge2d 0.14.2 modern surface: `Forge2DGame(gravity:)` has a built-in `camera` (`camera.viewfinder.zoom`); `BodyComponent.createBody()` -> `world.createBody(BodyDef(type:, position:, userData:, bullet:))..createFixture(FixtureDef(shape, density:, friction:, restitution:))`; shapes `EdgeShape()..set(a,b)`, `PolygonShape()..setAsBox(hx,hy,center,angle)`, `CircleShape()..radius`; launch with `body.applyLinearImpulse(Vector2)`; collisions via `with ContactCallbacks` + `beginContact(Object other, Contact c)` (needs `userData` set).
+
+Input GOTCHAS (both hit for real, Day 1):
+- `DragCallbacks` and the drag event classes come from **`package:flame/events.dart`** — NOT re-exported by `flame_forge2d`. Import it explicitly or every `Drag*` type is "not found".
+- Drag event position fields differ PER TYPE: `DragStartEvent` has `canvasPosition` / `localPosition`; `DragUpdateEvent` has `canvasStartPosition` / `canvasEndPosition` / `canvasDelta` (there is NO single `canvasPosition`); `DragEndEvent` has NO position at all — so capture the current point from `onDragUpdate` (`canvasEndPosition`).
 
 ## Run / analyze / test
 

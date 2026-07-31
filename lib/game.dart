@@ -1,3 +1,6 @@
+import 'dart:ui' show Color;
+
+import 'package:flame/events.dart';
 import 'package:flame_forge2d/flame_forge2d.dart';
 
 import 'components/block.dart';
@@ -18,10 +21,22 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    camera.viewfinder.zoom = Cfg.zoom;
     world.add(Ground());
     _buildTower();
     _spawnBall();
+  }
+
+  @override
+  Color backgroundColor() => Cfg.bgColor;
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    // Fit the scene to the window width and center on the action, so framing
+    // is consistent on any window size (recomputed on every resize).
+    camera.viewfinder
+      ..zoom = size.x / Cfg.viewWorldWidth
+      ..position = Cfg.cameraTarget;
   }
 
   void _buildTower() {
@@ -56,7 +71,9 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   @override
   void onDragUpdate(DragUpdateEvent event) {
     super.onDragUpdate(event);
-    _dragCurrent = event.canvasPosition.clone();
+    // DragUpdateEvent exposes start/end/delta, not a single canvasPosition;
+    // canvasEndPosition is the current pointer location for this update.
+    _dragCurrent = event.canvasEndPosition.clone();
   }
 
   @override
@@ -69,7 +86,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     // Pull-back vector, screen px. Screen +y and world +y both point down, so
     // no axis flip: drag down-and-back and the ball flies up-and-forward.
     final pullPx = start - _dragCurrent;
-    var pullWorld = pullPx / Cfg.zoom;
+    var pullWorld = pullPx / camera.viewfinder.zoom;
     if (pullWorld.length > Cfg.maxPull) {
       pullWorld = pullWorld.normalized() * Cfg.maxPull;
     }

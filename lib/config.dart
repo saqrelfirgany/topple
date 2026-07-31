@@ -8,7 +8,11 @@ import 'package:flutter/material.dart';
 class Cfg {
   // world
   static Vector2 get gravity => Vector2(0, 10);
-  static const double zoom = 26; // screen pixels per world unit (camera zoom)
+  // camera fits this many world units across the window width, then centers on
+  // `cameraTarget`. Deriving zoom from the window keeps framing consistent on
+  // any screen size (a fixed zoom looked fine on one window, tiny on another).
+  static const double viewWorldWidth = 26;
+  static Vector2 get cameraTarget => Vector2(2, 2);
 
   // ground: a static floor line. Sits below the camera center (so +y).
   static const double groundY = 6.0;
@@ -38,6 +42,7 @@ class Cfg {
   static const double maxPull = 6.0; // clamp pull length (world units)
 
   // colors
+  static const Color bgColor = Color(0xFF0E1A2F); // deep navy sky (brand-ish)
   static final Paint groundPaint = Paint()..color = const Color(0xFF3A4A63);
   static final Paint blockPaint = Paint()..color = const Color(0xFF6F9BD8);
   static final Paint targetPaint = Paint()..color = const Color(0xFFFFC46B);
