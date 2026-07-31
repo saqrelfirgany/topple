@@ -6,13 +6,13 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="description" content="Topple — a 2D slingshot knock-down physics game. Pull back, fling the ball, and topple the orange targets across 10 hand-built levels. Built with Flutter, Flame and Forge2D.">
+  <meta name="description" content="Topple — a 2D bow-and-arrow knock-down physics game. Draw the bow, loose the arrow, and topple the targets across 13 hand-built levels. Built with Flutter, Flame and Forge2D.">
   <meta name="theme-color" content="#0E1A2F">
 
   <!-- Open Graph / link preview -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Topple — a 2D slingshot physics game">
-  <meta property="og:description" content="Pull back, fling, and topple the targets. 10 levels of Flutter + Flame + Forge2D physics.">
+  <meta property="og:title" content="Topple — a 2D archery physics game">
+  <meta property="og:description" content="Draw the bow, loose the arrow, and topple the targets. 13 levels of Flutter + Flame + Forge2D physics.">
   <meta property="og:image" content="https://saqrelfirgany.github.io/topple/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -20,8 +20,8 @@
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Topple — a 2D slingshot physics game">
-  <meta name="twitter:description" content="Pull back, fling, and topple the targets. 10 levels of Flutter + Flame + Forge2D physics.">
+  <meta name="twitter:title" content="Topple — a 2D archery physics game">
+  <meta name="twitter:description" content="Draw the bow, loose the arrow, and topple the targets. 13 levels of Flutter + Flame + Forge2D physics.">
   <meta name="twitter:image" content="https://saqrelfirgany.github.io/topple/og-image.png">
 
   <!-- iOS -->
@@ -33,7 +33,7 @@
 
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>Topple — 2D slingshot physics game</title>
+  <title>Topple — 2D archery physics game</title>
   <link rel="manifest" href="manifest.json">
 
   <style>
@@ -61,17 +61,34 @@
 <body>
   <div id="loading">
     <div class="logo">TOPPLE</div>
-    <div class="sub">loading…</div>
-    <div class="spin"></div>
+    <div class="sub" id="load-sub">loading…</div>
+    <div class="spin" id="load-spin"></div>
   </div>
   <script>
-    // Hide the loading screen once Flutter paints its first frame.
-    window.addEventListener('flutter-first-frame', function () {
+    function hideLoading() {
       var l = document.getElementById('loading');
       if (l) {
         l.style.opacity = '0';
         setTimeout(function () { if (l && l.parentNode) l.parentNode.removeChild(l); }, 500);
       }
+    }
+    // Surface a startup crash on screen instead of spinning forever.
+    function showLoadError(msg) {
+      var sub = document.getElementById('load-sub');
+      var spin = document.getElementById('load-spin');
+      if (spin) spin.style.display = 'none';
+      if (sub) {
+        sub.textContent = 'Startup error: ' + String(msg).slice(0, 320);
+        sub.style.color = '#ff9c9c';
+        sub.style.maxWidth = '82vw';
+      }
+    }
+    window.addEventListener('flutter-first-frame', hideLoading);
+    window.addEventListener('error', function (e) {
+      showLoadError((e && (e.message || (e.error && e.error.message))) || 'unknown error');
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      showLoadError('promise: ' + (e && e.reason && (e.reason.message || e.reason)));
     });
   </script>
   <script src="flutter_bootstrap.js" async></script>
