@@ -89,6 +89,17 @@ class ToppleHud extends StatelessWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
+            if (won) ...[
+              const SizedBox(height: 10),
+              Text(
+                '★' * s.stars + '☆' * (3 - s.stars),
+                style: const TextStyle(
+                  color: Color(0xFFFFC46B),
+                  fontSize: 34,
+                  letterSpacing: 4,
+                ),
+              ),
+            ],
             const SizedBox(height: 8),
             Text(
               won ? 'Nice shot.' : 'So close — try again.',

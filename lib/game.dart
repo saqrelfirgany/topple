@@ -23,12 +23,14 @@ class HudState {
     required this.targets,
     required this.targetsLeft,
     required this.phase,
+    this.stars = 0,
   });
   final int level;
   final int shotsLeft;
   final int targets;
   final int targetsLeft;
   final Phase phase;
+  final int stars;
 }
 
 class ToppleGame extends Forge2DGame with DragCallbacks {
@@ -53,6 +55,9 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
 
   int _levelIndex = 0;
   int _shotsLeft = 0;
+  int _ammo = 0;
+  int _ballsUsed = 0;
+  int _stars = 0;
   Phase _phase = Phase.aiming;
 
   double _flyTime = 0;
@@ -118,6 +123,9 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
       world.add(b);
     }
     _shotsLeft = def.ammo;
+    _ammo = def.ammo;
+    _ballsUsed = 0;
+    _stars = 0;
     _phase = Phase.aiming;
     _flyTime = 0;
     _knockedSet.clear();
@@ -149,8 +157,11 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
       targets: _targets,
       targetsLeft: _targetsLeft,
       phase: _phase,
+      stars: _stars,
     );
   }
+
+  void _awardStars() => _stars = math.max(1, math.min(3, _ammo - _ballsUsed + 1));
 
   // ---- per-frame -------------------------------------------------------------
 
@@ -173,10 +184,19 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     }
     _applyShake(dt);
 
+    // ball trail while a shot is in the air
+    final tb = _ball;
+    if (_phase == Phase.flying && tb != null && tb.isMounted) {
+      _fx.trail(tb.pos);
+    } else {
+      _fx.trail(null);
+    }
+
     if (_phase != Phase.flying) return;
     _flyTime += dt;
 
     if (_targetsLeft == 0) {
+      _awardStars();
       _phase = Phase.won;
       _pushHud();
       return;
@@ -193,6 +213,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   void _resolveShot() {
     _shotsLeft = math.max(0, _shotsLeft - 1);
     if (_targetsLeft == 0) {
+      _awardStars();
       _phase = Phase.won;
     } else if (_shotsLeft <= 0) {
       _phase = Phase.lost;
@@ -253,6 +274,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     final ball = _ball;
     if (ball == null || !ball.isMounted) return;
     ball.launch(vel * ball.body.mass); // impulse = mass * velocity
+    _ballsUsed++;
     _phase = Phase.flying;
     _flyTime = 0;
     _pushHud();
