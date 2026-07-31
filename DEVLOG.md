@@ -14,6 +14,19 @@ What's real already:
 
 Primitive shapes on purpose — Day 1 is about the loop *feeling* right, not the art.
 
-Next (Day 2): a visual slingshot band, a real win condition (clear the targets), and a shot counter.
+## Day 2 — it's a real game (2026-07-31)
 
-Clip: `../showcase/topple/day1-first-run.mov` · still: `../showcase/topple/day1-topple.png`
+Turned the sandbox into an actual game:
+
+- **Levels + ammo + win/lose**: clear every target block to win; run out of balls and it's a retry. A small state machine (aiming → flying → won/lost) drives it.
+- **Aiming trajectory preview**: while you pull back, a dotted arc predicts the ball's real path — integrated with the same gravity the physics uses, so what you see is what you get.
+- **HUD**: level, targets cleared, balls left — a clean Flutter overlay layered on top of the Flame canvas.
+- **Juice**: the screen kicks when a tower topples, and a navy sky gradient replaced the flat black.
+- **Impact debris**: each block throws a short shower of tinted squares as it goes down.
+- Five hand-made levels now, from a simple tower to twin-target towers.
+
+Still primitive shapes — but it plays like a game, not a demo.
+
+Next (Day 3): star ratings, a ball trail, sound — then a public build.
+
+Clips: `../showcase/topple/day1-first-run.mov`, `../showcase/topple/day2-real-game.mov`
