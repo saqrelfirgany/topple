@@ -60,4 +60,30 @@ final List<LevelDef> kLevels = [
       ],
     ],
   ),
+  // L4 — a pyramid: wide base narrowing upward, one target crowning it.
+  LevelDef(
+    ammo: 5,
+    blocks: [
+      BlockSpec(4.5, 0),
+      BlockSpec(5.54, 0),
+      BlockSpec(6.58, 0),
+      BlockSpec(7.62, 0),
+      BlockSpec(5.02, 1),
+      BlockSpec(6.06, 1),
+      BlockSpec(7.1, 1),
+      BlockSpec(5.54, 2),
+      BlockSpec(6.58, 2),
+      BlockSpec(6.06, 3, target: true),
+    ],
+  ),
+  // L5 — two towers, a target crowning each; clear both to win.
+  LevelDef(
+    ammo: 5,
+    blocks: [
+      for (var r = 0; r < 4; r++) BlockSpec(4.2, r),
+      for (var r = 0; r < 4; r++) BlockSpec(8.4, r),
+      BlockSpec(4.2, 4, target: true),
+      BlockSpec(8.4, 4, target: true),
+    ],
+  ),
 ];

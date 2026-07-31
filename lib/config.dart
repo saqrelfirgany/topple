@@ -56,10 +56,14 @@ class Cfg {
   static const Color skyTop = Color(0xFF1E4074);
   static const Color skyBottom = Color(0xFF0B1730);
   static const Color bgColor = Color(0xFF0E1A2F);
+  static const Color blockColor = Color(0xFF6F9BD8);
+  static const Color targetColor = Color(0xFFFFC46B);
+  static const Color ballColor = Color(0xFF54C5F8);
+  static const int particlesPerKnock = 14; // debris when a block topples
   static final Paint groundPaint = Paint()..color = const Color(0xFF35507A);
-  static final Paint blockPaint = Paint()..color = const Color(0xFF6F9BD8);
-  static final Paint targetPaint = Paint()..color = const Color(0xFFFFC46B);
-  static final Paint ballPaint = Paint()..color = const Color(0xFF54C5F8);
+  static final Paint blockPaint = Paint()..color = blockColor;
+  static final Paint targetPaint = Paint()..color = targetColor;
+  static final Paint ballPaint = Paint()..color = ballColor;
   static final Paint aimDotPaint = Paint()..color = const Color(0xB3FFFFFF);
   static final Paint bandPaint = Paint()
     ..color = const Color(0xFFFFC46B)

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import 'components/block.dart';
 import 'components/ground.dart';
+import 'components/particles.dart';
 import 'components/projectile.dart';
 import 'components/slingshot.dart';
 import 'config.dart';
@@ -47,6 +48,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   final _rng = math.Random();
   final List<Block> _blocks = [];
   late final Slingshot _slingshot;
+  late final Fx _fx;
   Projectile? _ball;
 
   int _levelIndex = 0;
@@ -54,8 +56,8 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   Phase _phase = Phase.aiming;
 
   double _flyTime = 0;
-  int _lastKnocked = 0;
   double _shake = 0;
+  final Set<Block> _knockedSet = {};
 
   Vector2? _dragStart; // canvas px
   Vector2 _dragCurrent = Vector2.zero();
@@ -69,6 +71,8 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     world.add(Ground());
     _slingshot = Slingshot();
     world.add(_slingshot);
+    _fx = Fx();
+    world.add(_fx);
     _loadLevel(0);
   }
 
@@ -116,7 +120,8 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     _shotsLeft = def.ammo;
     _phase = Phase.aiming;
     _flyTime = 0;
-    _lastKnocked = 0;
+    _knockedSet.clear();
+    _fx.clear();
     _shake = 0;
     camera.viewfinder.position = Cfg.cameraTarget;
     _spawnBall();
@@ -136,7 +141,6 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   int get _targets => _blocks.where((b) => b.isTarget).length;
   int get _targetsLeft =>
       _blocks.where((b) => b.isTarget && !b.knocked).length;
-  int get _knockedCount => _blocks.where((b) => b.knocked).length;
 
   void _pushHud() {
     hud.value = HudState(
@@ -154,11 +158,17 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   void update(double dt) {
     super.update(dt);
 
-    // shake whenever new blocks topple, so hits feel weighty
-    final knocked = _knockedCount;
-    if (knocked > _lastKnocked) {
+    // debris + shake + HUD refresh whenever a block newly topples
+    var newlyKnocked = false;
+    for (final b in _blocks) {
+      if (b.knocked && !_knockedSet.contains(b)) {
+        _knockedSet.add(b);
+        _fx.burst(b.body.position, b.isTarget ? Cfg.targetColor : Cfg.blockColor);
+        newlyKnocked = true;
+      }
+    }
+    if (newlyKnocked) {
       _shake = Cfg.shakeOnKnock;
-      _lastKnocked = knocked;
       _pushHud();
     }
     _applyShake(dt);
