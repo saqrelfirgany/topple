@@ -1,22 +1,11 @@
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
-import 'game.dart';
-import 'hud.dart';
+import 'app.dart';
+import 'levels.dart';
+import 'save_store.dart';
 
-void main() {
-  runApp(
-    MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: GameWidget<ToppleGame>(
-          game: ToppleGame(),
-          overlayBuilderMap: {
-            'hud': (context, game) => ToppleHud(game),
-          },
-          initialActiveOverlays: const ['hud'],
-        ),
-      ),
-    ),
-  );
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final store = await SaveStore.load(kLevels.length);
+  runApp(ToppleApp(store: store));
 }

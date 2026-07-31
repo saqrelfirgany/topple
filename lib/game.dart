@@ -37,7 +37,21 @@ class HudState {
 }
 
 class ToppleGame extends Forge2DGame with DragCallbacks {
-  ToppleGame() : super(gravity: Cfg.gravity);
+  ToppleGame({
+    this.startLevel = 0,
+    this.onLevelResult,
+    this.onExit,
+  }) : super(gravity: Cfg.gravity);
+
+  /// Level to open on load (chosen by the level picker).
+  final int startLevel;
+
+  /// Fired when a level is cleared, with its index and the stars earned; the
+  /// app shell uses it to persist progress.
+  final void Function(int levelIndex, int stars)? onLevelResult;
+
+  /// Fired when the player leaves back to the level picker.
+  final VoidCallback? onExit;
 
   /// Drives the HUD overlay (see hud.dart).
   final ValueNotifier<HudState> hud = ValueNotifier<HudState>(
@@ -83,7 +97,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     _fx = Fx();
     world.add(_fx);
     Sfx.preload();
-    _loadLevel(0);
+    _loadLevel(startLevel);
   }
 
   @override
@@ -155,6 +169,13 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   void restartLevel() => _loadLevel(_levelIndex);
   void nextLevel() => _loadLevel(_levelIndex + 1);
 
+  /// True when the current level is the last one, so the HUD shows "Finish"
+  /// instead of "Next Level".
+  bool get isLastLevel => _levelIndex >= kLevels.length - 1;
+
+  /// Leave the game and return to the level picker.
+  void exitToLevels() => onExit?.call();
+
   void _spawnBall() {
     _ball?.removeFromParent();
     _ball = Projectile(Cfg.anchor.clone());
@@ -225,10 +246,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     _flyTime += dt;
 
     if (_targetsLeft == 0) {
-      _awardStars();
-      _phase = Phase.won;
-      Sfx.win();
-      _pushHud();
+      _win();
       return;
     }
 
@@ -243,16 +261,24 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   void _resolveShot() {
     _shotsLeft = math.max(0, _shotsLeft - 1);
     if (_targetsLeft == 0) {
-      _awardStars();
-      _phase = Phase.won;
-      Sfx.win();
-    } else if (_shotsLeft <= 0) {
+      _win();
+      return;
+    }
+    if (_shotsLeft <= 0) {
       _phase = Phase.lost;
       Sfx.lose();
     } else {
       _phase = Phase.aiming;
       _spawnBall();
     }
+    _pushHud();
+  }
+
+  void _win() {
+    _awardStars();
+    _phase = Phase.won;
+    Sfx.win();
+    onLevelResult?.call(_levelIndex, _stars);
     _pushHud();
   }
 

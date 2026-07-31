@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'config.dart';
 import 'game.dart';
 
-/// Flutter overlay drawn on top of the game: a top stat bar (level, targets,
-/// balls), an aiming hint, and a win/lose panel. It rebuilds off the game's
-/// `hud` ValueNotifier, so it always matches the game state.
+/// Flutter overlay drawn on top of the game: a levels button, a compact stat
+/// bar (level, targets, balls), a mute toggle, an aiming hint, and the
+/// win/lose panel. It rebuilds off the game's `hud` ValueNotifier, so it always
+/// matches the game state.
 class ToppleHud extends StatelessWidget {
   const ToppleHud(this.game, {super.key});
 
@@ -17,38 +19,51 @@ class ToppleHud extends StatelessWidget {
       builder: (context, s, _) {
         return Stack(
           children: [
+            // top-left: back to the level picker
             Positioned(
-              top: 18,
-              left: 18,
-              right: 18,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _chip('LEVEL ${s.level}'),
-                  _chip('TARGETS  ${s.targets - s.targetsLeft}/${s.targets}'),
-                  _chip('BALLS  ${s.shotsLeft}'),
-                ],
+              top: 16,
+              left: 14,
+              child: _roundButton(
+                child: const Icon(Icons.apps_rounded,
+                    color: Colors.white, size: 22),
+                onTap: game.exitToLevels,
               ),
             ),
+            // top-right: stats, scaled down rather than overflowing on phones
+            Positioned(
+              top: 18,
+              left: 70,
+              right: 14,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _chip('LEVEL ${s.level}'),
+                      const SizedBox(width: 8),
+                      _chip(
+                          'TARGETS ${s.targets - s.targetsLeft}/${s.targets}'),
+                      const SizedBox(width: 8),
+                      _chip('BALLS ${s.shotsLeft}'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // bottom-right: mute
             Positioned(
               bottom: 16,
               right: 16,
-              child: GestureDetector(
-                onTap: game.toggleMute,
-                child: Container(
-                  width: 44,
-                  height: 44,
-                  decoration: const BoxDecoration(
-                    color: Color(0x99000000),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      s.muted ? '🔇' : '🔊',
-                      style: const TextStyle(fontSize: 19),
-                    ),
+              child: _roundButton(
+                child: Center(
+                  child: Text(
+                    s.muted ? '🔇' : '🔊',
+                    style: const TextStyle(fontSize: 19),
                   ),
                 ),
+                onTap: game.toggleMute,
               ),
             ),
             if (s.phase == Phase.aiming)
@@ -77,6 +92,20 @@ class ToppleHud extends StatelessWidget {
     );
   }
 
+  Widget _roundButton({required Widget child, required VoidCallback onTap}) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 44,
+          height: 44,
+          decoration: const BoxDecoration(
+            color: Color(0x99000000),
+            shape: BoxShape.circle,
+          ),
+          child: child,
+        ),
+      );
+
   Widget _chip(String t) => Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: const BoxDecoration(
@@ -96,6 +125,34 @@ class ToppleHud extends StatelessWidget {
 
   Widget _panel(HudState s) {
     final won = s.phase == Phase.won;
+    final last = game.isLastLevel;
+    final title =
+        won ? (last ? 'All Cleared!' : 'Level Complete') : 'Out of Balls';
+    final subtitle = won
+        ? (last ? 'You toppled every level.' : 'Nice shot.')
+        : 'So close — try again.';
+
+    late final String primaryLabel;
+    late final VoidCallback primaryAction;
+    late final String secondaryLabel;
+    late final VoidCallback secondaryAction;
+    if (won && !last) {
+      primaryLabel = 'Next Level';
+      primaryAction = game.nextLevel;
+      secondaryLabel = 'Levels';
+      secondaryAction = game.exitToLevels;
+    } else if (won && last) {
+      primaryLabel = 'Back to Levels';
+      primaryAction = game.exitToLevels;
+      secondaryLabel = 'Replay';
+      secondaryAction = game.restartLevel;
+    } else {
+      primaryLabel = 'Retry';
+      primaryAction = game.restartLevel;
+      secondaryLabel = 'Levels';
+      secondaryAction = game.exitToLevels;
+    }
+
     return Container(
       color: const Color(0xAA060D1A),
       child: Center(
@@ -103,7 +160,7 @@ class ToppleHud extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              won ? 'Level Complete' : 'Out of Balls',
+              title,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 30,
@@ -115,7 +172,7 @@ class ToppleHud extends StatelessWidget {
               Text(
                 '★' * s.stars + '☆' * (3 - s.stars),
                 style: const TextStyle(
-                  color: Color(0xFFFFC46B),
+                  color: Cfg.targetColor,
                   fontSize: 34,
                   letterSpacing: 4,
                 ),
@@ -123,22 +180,37 @@ class ToppleHud extends StatelessWidget {
             ],
             const SizedBox(height: 8),
             Text(
-              won ? 'Nice shot.' : 'So close — try again.',
+              subtitle,
               style: const TextStyle(color: Color(0xCCFFFFFF), fontSize: 15),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 22),
             ElevatedButton(
-              onPressed: won ? game.nextLevel : game.restartLevel,
+              onPressed: primaryAction,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF54C5F8),
+                backgroundColor: Cfg.ballColor,
                 foregroundColor: const Color(0xFF04101F),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: Text(
-                won ? 'Next Level' : 'Retry',
+                primaryLabel,
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: secondaryAction,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xCCFFFFFF),
+              ),
+              child: Text(
+                secondaryLabel,
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               ),
             ),
           ],
