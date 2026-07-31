@@ -14,7 +14,7 @@ import 'components/slingshot.dart';
 import 'config.dart';
 import 'levels.dart';
 
-enum Phase { aiming, flying, won, lost }
+enum Phase { aiming, flying, winning, won, lost }
 
 /// Small immutable snapshot the Flutter HUD listens to.
 class HudState {
@@ -26,6 +26,8 @@ class HudState {
     required this.phase,
     this.stars = 0,
     this.muted = false,
+    this.newBest = false,
+    this.paused = false,
   });
   final int level;
   final int shotsLeft;
@@ -34,6 +36,8 @@ class HudState {
   final Phase phase;
   final int stars;
   final bool muted;
+  final bool newBest;
+  final bool paused;
 }
 
 class ToppleGame extends Forge2DGame with DragCallbacks {
@@ -46,9 +50,10 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   /// Level to open on load (chosen by the level picker).
   final int startLevel;
 
-  /// Fired when a level is cleared, with its index and the stars earned; the
-  /// app shell uses it to persist progress.
-  final void Function(int levelIndex, int stars)? onLevelResult;
+  /// Fired when a level is cleared, with its index and the stars earned. The
+  /// app shell persists progress and returns true when this beat the player's
+  /// previous best — which drives the HUD's "New Best!" note.
+  final bool Function(int levelIndex, int stars)? onLevelResult;
 
   /// Fired when the player leaves back to the level picker.
   final VoidCallback? onExit;
@@ -75,12 +80,24 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   int _ammo = 0;
   int _ballsUsed = 0;
   int _stars = 0;
+  bool _newBest = false;
+  bool _paused = false;
   Phase _phase = Phase.aiming;
 
   double _flyTime = 0;
   double _shake = 0;
   double _hitCd = 0;
   final Set<Block> _knockedSet = {};
+
+  // opening camera pan: eases viewfinder from _introFrom (framing the target)
+  // back to the home position over _introT seconds.
+  double _introT = 0;
+  Vector2 _introFrom = Vector2.zero();
+
+  // victory slow-mo + screen flash
+  double _timeScale = 1.0;
+  double _winDelay = 0;
+  double _flash = 0;
 
   Vector2? _dragStart; // canvas px
   Vector2 _dragCurrent = Vector2.zero();
@@ -125,6 +142,13 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
         Rect.fromLTWH(size.x * 0.40, size.y * 0.20, size.x * 0.13, size.y * 0.05),
         cloud);
     super.render(canvas);
+    // impact / victory flash on top of the world (HUD stays above this)
+    if (_flash > 0.001) {
+      canvas.drawRect(
+        Offset.zero & Size(size.x, size.y),
+        Paint()..color = Color.fromRGBO(255, 255, 255, _flash.clamp(0.0, 0.6)),
+      );
+    }
   }
 
   @override
@@ -137,7 +161,11 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
 
   // ---- level lifecycle -------------------------------------------------------
 
-  void _loadLevel(int index) {
+  void _loadLevel(int index, {bool intro = true}) {
+    if (_paused) {
+      _paused = false;
+      resumeEngine();
+    }
     for (final b in _blocks) {
       b.removeFromParent();
     }
@@ -148,7 +176,11 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     _levelIndex = index % kLevels.length;
     final def = kLevels[_levelIndex];
     for (final spec in def.blocks) {
-      final b = Block(blockPos(spec), isTarget: spec.target);
+      final b = Block(
+        blockPos(spec),
+        isTarget: spec.target,
+        material: spec.material,
+      );
       _blocks.add(b);
       world.add(b);
     }
@@ -156,17 +188,40 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     _ammo = def.ammo;
     _ballsUsed = 0;
     _stars = 0;
+    _newBest = false;
     _phase = Phase.aiming;
     _flyTime = 0;
     _knockedSet.clear();
     _fx.clear();
     _shake = 0;
-    camera.viewfinder.position = Cfg.cameraTarget;
+    _timeScale = 1.0;
+    _winDelay = 0;
+    _flash = 0;
+    _setupIntro(intro);
     _spawnBall();
     _pushHud();
   }
 
-  void restartLevel() => _loadLevel(_levelIndex);
+  /// Aims the opening pan at the level's targets, or snaps straight home when
+  /// [intro] is false (used on retry, so replays feel instant).
+  void _setupIntro(bool intro) {
+    final targets = _blocks.where((b) => b.isTarget);
+    if (intro && targets.isNotEmpty) {
+      var c = Vector2.zero();
+      for (final t in targets) {
+        c = c + t.startPosition;
+      }
+      c = c / targets.length.toDouble();
+      _introFrom = Vector2(c.x, c.y - 0.4);
+      _introT = Cfg.introDuration;
+      camera.viewfinder.position = _introFrom.clone();
+    } else {
+      _introT = 0;
+      camera.viewfinder.position = Cfg.cameraTarget;
+    }
+  }
+
+  void restartLevel() => _loadLevel(_levelIndex, intro: false);
   void nextLevel() => _loadLevel(_levelIndex + 1);
 
   /// True when the current level is the last one, so the HUD shows "Finish"
@@ -174,7 +229,13 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   bool get isLastLevel => _levelIndex >= kLevels.length - 1;
 
   /// Leave the game and return to the level picker.
-  void exitToLevels() => onExit?.call();
+  void exitToLevels() {
+    if (_paused) {
+      _paused = false;
+      resumeEngine();
+    }
+    onExit?.call();
+  }
 
   void _spawnBall() {
     _ball?.removeFromParent();
@@ -196,6 +257,8 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
       phase: _phase,
       stars: _stars,
       muted: Sfx.muted,
+      newBest: _newBest,
+      paused: _paused,
     );
   }
 
@@ -204,6 +267,20 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
 
   void toggleMute() {
     Sfx.muted = !Sfx.muted;
+    Sfx.applyMute();
+    _pushHud();
+  }
+
+  /// Pause/resume mid-play. Freezes the Flame loop (the HUD overlay keeps
+  /// working, so the pause panel is interactive).
+  void togglePause() {
+    if (!_paused && _phase != Phase.aiming && _phase != Phase.flying) return;
+    _paused = !_paused;
+    if (_paused) {
+      pauseEngine();
+    } else {
+      resumeEngine();
+    }
     _pushHud();
   }
 
@@ -211,27 +288,68 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
 
   @override
   void update(double dt) {
-    super.update(dt);
+    super.update(dt * _timeScale);
     if (_hitCd > 0) _hitCd -= dt;
+    if (_flash > 0) _flash = math.max(0, _flash - dt * Cfg.flashDecay);
+
+    // opening camera pan — hold input, ease from the target framing to home
+    if (_introT > 0) {
+      _introT -= dt;
+      final f = 1 - (_introT / Cfg.introDuration).clamp(0.0, 1.0);
+      final e = 1 - (1 - f) * (1 - f) * (1 - f); // ease-out cubic
+      camera.viewfinder.position =
+          _introFrom + (Cfg.cameraTarget - _introFrom) * e;
+      if (_introT <= 0) {
+        _introT = 0;
+        camera.viewfinder.position = Cfg.cameraTarget;
+      }
+      return;
+    }
 
     // debris + shake + hit sound + HUD refresh whenever a block newly topples
     var newlyKnocked = false;
+    var glassBroke = false;
+    var impact = false; // a wood/stone block moved (not glass)
+    var stoneImpact = false;
+    var targetKnocked = false;
+    List<Block>? shattered;
     for (final b in _blocks) {
       if (b.knocked && !_knockedSet.contains(b)) {
         _knockedSet.add(b);
-        _fx.burst(
-            b.body.position, b.isTarget ? Cfg.targetColor : Cfg.blockColor);
+        if (b.isGlass) {
+          _fx.shatter(b.body.position);
+          (shattered ??= []).add(b);
+          glassBroke = true;
+        } else {
+          _fx.burst(
+              b.body.position, b.isTarget ? Cfg.targetColor : Cfg.blockColor);
+          impact = true;
+          if (b.isTarget) targetKnocked = true;
+          if (b.material == BlockMaterial.stone) stoneImpact = true;
+        }
         newlyKnocked = true;
+      }
+    }
+    // remove shattered glass after the loop (never mutate _blocks mid-iterate);
+    // glass is obstacle-only, so target counts are unaffected.
+    if (shattered != null) {
+      for (final b in shattered) {
+        _blocks.remove(b);
+        b.removeFromParent();
       }
     }
     if (newlyKnocked) {
       _shake = Cfg.shakeOnKnock;
-      if (_hitCd <= 0) {
-        Sfx.hit();
-        _hitCd = Cfg.hitCooldown;
-      }
       _pushHud();
     }
+    // distinct audio per material; the impact channel is rate-limited so a
+    // whole tower falling isn't a wall of noise.
+    if (glassBroke) Sfx.glass();
+    if (impact && _hitCd <= 0) {
+      stoneImpact ? Sfx.thud() : Sfx.hit();
+      _hitCd = Cfg.hitCooldown;
+    }
+    if (targetKnocked) _flash = math.max(_flash, Cfg.flashOnTarget);
     _applyShake(dt);
 
     // ball trail while a shot is in the air
@@ -242,11 +360,18 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
       _fx.trail(null);
     }
 
+    // victory slow-mo: hold on the collapse in real time, then show the panel
+    if (_phase == Phase.winning) {
+      _winDelay -= dt;
+      if (_winDelay <= 0) _finishWin();
+      return;
+    }
+
     if (_phase != Phase.flying) return;
     _flyTime += dt;
 
     if (_targetsLeft == 0) {
-      _win();
+      _beginWin();
       return;
     }
 
@@ -261,7 +386,7 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   void _resolveShot() {
     _shotsLeft = math.max(0, _shotsLeft - 1);
     if (_targetsLeft == 0) {
-      _win();
+      _beginWin();
       return;
     }
     if (_shotsLeft <= 0) {
@@ -274,11 +399,28 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     _pushHud();
   }
 
-  void _win() {
+  // Two-stage win: [_beginWin] freezes input and slows time so the collapse
+  // reads dramatically; [_finishWin] fires when the slow-mo window elapses and
+  // reveals the panel, celebration, and persisted result.
+  void _beginWin() {
     _awardStars();
-    _phase = Phase.won;
+    _phase = Phase.winning;
+    _timeScale = Cfg.winSlowmoScale;
+    _winDelay = Cfg.winSlowmoTime;
+    _flash = math.max(_flash, Cfg.flashOnWin);
     Sfx.win();
-    onLevelResult?.call(_levelIndex, _stars);
+    _pushHud();
+  }
+
+  void _finishWin() {
+    _timeScale = 1.0;
+    _phase = Phase.won;
+    if (_stars >= 3) {
+      for (final t in _blocks.where((b) => b.isTarget)) {
+        _fx.celebrate(t.body.position);
+      }
+    }
+    _newBest = onLevelResult?.call(_levelIndex, _stars) ?? false;
     _pushHud();
   }
 
@@ -309,7 +451,8 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
   @override
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
-    if (_phase != Phase.aiming) return;
+    if (_phase != Phase.aiming || _introT > 0 || _paused) return;
+    Sfx.startMusic();
     _dragStart = event.canvasPosition.clone();
     _dragCurrent = event.canvasPosition.clone();
   }
@@ -319,7 +462,12 @@ class ToppleGame extends Forge2DGame with DragCallbacks {
     super.onDragUpdate(event);
     if (_phase != Phase.aiming || _dragStart == null) return;
     _dragCurrent = event.canvasEndPosition.clone();
-    _slingshot.aimVelocity = _launchVelocity();
+    final vel = _launchVelocity();
+    _slingshot.aimVelocity = vel;
+    final ball = _ball;
+    if (ball != null && vel.length2 > 0.0001) {
+      ball.aimAngle = math.atan2(vel.y, vel.x);
+    }
   }
 
   @override

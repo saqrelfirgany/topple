@@ -27,6 +27,40 @@ Turned the sandbox into an actual game:
 
 Still primitive shapes — but it plays like a game, not a demo.
 
-Next (Day 3): star ratings, a ball trail, sound — then a public build.
+## Day 3 — stars, sound, and a public build (2026-07-31)
+
+Made it feel finished and put it online:
+
+- **Star ratings** — three stars for a clean clear, fewer as you spend more balls.
+- **Ball trail** streaming behind a shot in the air.
+- **Procedural sound** — launch, hit, win and lose, all synthesised from maths (zero third-party licensing) — plus a mute toggle.
+- **Shipped live** on GitHub Pages and linked from the games hub.
+
+## Day 4 — from primitives to a look (2026-07-31)
+
+Same physics, a proper face:
+
+- Blocks became **rounded slabs with a top sheen**; the ground became a **grass-and-dirt** strip; the ball got a **shine that spins with it** as it rolls; and **soft parallax clouds** drift behind the play.
+
+## Day 5 — a whole game around the game (2026-07-31)
+
+Wrapped the loop in an actual product:
+
+- **Start menu** — logo, Continue/Play, Select Level, total stars.
+- **Level-select grid** with per-level star ratings and locked-until-you-reach-them levels.
+- **Saved progress** — best stars and unlocks persist across sessions (`shared_preferences`).
+- **Music + clicks** — a seamless procedural ambient loop and soft button sounds.
+- **"LEVEL N" card** at the start of each level, and a **"New Best!"** note when you beat your rating.
+- A **cinematic opening camera pan** that frames the target before easing to the slingshot, and an **aim line that reddens** as you pull toward maximum power.
+
+## Day 6 — depth, feel, and shippability (2026-07-31)
+
+The "make it excellent" pass:
+
+- **Block materials** — heavy **stone** that shrugs off your shots and works as a wall, and **glass** that shatters into shards and lets the ball punch through, each with its own sound.
+- **Victory slow-motion** — time dilates on the final knock so you watch the tower come down, then the panel drops.
+- **Pause overlay** (resume / restart / levels / sound) and **reset-progress** in the menu.
+- **13 levels** now, mixing wood, stone and glass.
+- **Web presentation** — branded title, favicon and app icons, a dark loading screen (no white flash), and a link-preview image so the deployed link looks sharp when it's shared.
 
 Clips: `../showcase/topple/day1-first-run.mov`, `../showcase/topple/day2-real-game.mov`

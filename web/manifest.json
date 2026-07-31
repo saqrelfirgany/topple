@@ -1,12 +1,12 @@
 {
-    "name": "topple",
-    "short_name": "topple",
+    "name": "Topple",
+    "short_name": "Topple",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0E1A2F",
+    "theme_color": "#0E1A2F",
+    "description": "A 2D slingshot knock-down physics game built with Flutter, Flame and Forge2D.",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {

@@ -8,11 +8,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Everything is kept in memory and mirrored to shared_preferences, so reads
 /// are synchronous and writes are fire-and-forget.
 class SaveStore {
-  SaveStore._(this._prefs, this._best, this._unlocked);
+  SaveStore._(this._prefs, this._best, this._unlocked, this._levelCount);
 
   final SharedPreferences _prefs;
   final Map<int, int> _best;
   int _unlocked;
+  final int _levelCount;
 
   static const String _kUnlocked = 'unlockedCount';
   static String _kStars(int i) => 'stars_$i';
@@ -28,7 +29,17 @@ class SaveStore {
     var unlocked = prefs.getInt(_kUnlocked) ?? 1;
     if (unlocked < 1) unlocked = 1;
     if (unlocked > levelCount) unlocked = levelCount;
-    return SaveStore._(prefs, best, unlocked);
+    return SaveStore._(prefs, best, unlocked, levelCount);
+  }
+
+  /// Wipe all saved progress: every star cleared, only level 0 unlocked again.
+  void reset() {
+    _best.clear();
+    _unlocked = 1;
+    _prefs.setInt(_kUnlocked, 1);
+    for (var i = 0; i < _levelCount; i++) {
+      _prefs.remove(_kStars(i));
+    }
   }
 
   int stars(int i) => _best[i] ?? 0;

@@ -1,46 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Topple — a 2D slingshot knock-down physics game. Pull back, fling the ball, and topple the orange targets across 10 hand-built levels. Built with Flutter, Flame and Forge2D.">
+  <meta name="theme-color" content="#0E1A2F">
 
-  <!-- iOS meta tags & icons -->
+  <!-- Open Graph / link preview -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Topple — a 2D slingshot physics game">
+  <meta property="og:description" content="Pull back, fling, and topple the targets. 10 levels of Flutter + Flame + Forge2D physics.">
+  <meta property="og:image" content="https://saqrelfirgany.github.io/topple/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="https://saqrelfirgany.github.io/topple/">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Topple — a 2D slingshot physics game">
+  <meta name="twitter:description" content="Pull back, fling, and topple the targets. 10 levels of Flutter + Flame + Forge2D physics.">
+  <meta name="twitter:image" content="https://saqrelfirgany.github.io/topple/og-image.png">
+
+  <!-- iOS -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="topple">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Topple">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>topple</title>
+  <title>Topple — 2D slingshot physics game</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #0E1A2F; overflow: hidden; }
+    #loading {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(#1E4074, #0B1730);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      transition: opacity .45s ease;
+    }
+    #loading .logo {
+      color: #fff; font-size: 46px; font-weight: 900; letter-spacing: 6px;
+      text-shadow: 0 6px 24px rgba(0,0,0,.4);
+    }
+    #loading .sub { color: #9fb3cf; font-size: 14px; margin-top: 8px; letter-spacing: .5px; }
+    #loading .spin {
+      margin-top: 26px; width: 34px; height: 34px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,.18); border-top-color: #54C5F8;
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
+  <div id="loading">
+    <div class="logo">TOPPLE</div>
+    <div class="sub">loading…</div>
+    <div class="spin"></div>
+  </div>
+  <script>
+    // Hide the loading screen once Flutter paints its first frame.
+    window.addEventListener('flutter-first-frame', function () {
+      var l = document.getElementById('loading');
+      if (l) {
+        l.style.opacity = '0';
+        setTimeout(function () { if (l && l.parentNode) l.parentNode.removeChild(l); }, 500);
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

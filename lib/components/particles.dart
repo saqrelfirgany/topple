@@ -32,6 +32,29 @@ class Fx extends PositionComponent {
     }
   }
 
+  /// A bigger, brighter, strongly-upward shower for a 3-star finish.
+  void celebrate(Vector2 at) {
+    const colors = [Cfg.targetColor, Cfg.ballColor, Color(0xFFFFFFFF)];
+    for (var i = 0; i < 22; i++) {
+      final ang = _rng.nextDouble() * pi * 2;
+      final sp = 2.5 + _rng.nextDouble() * 5.5;
+      final vel = Vector2(cos(ang) * sp, sin(ang) * sp - 4.0);
+      final life = 0.7 + _rng.nextDouble() * 0.6;
+      _ps.add(_P(at.clone(), vel, life, life, colors[i % 3]));
+    }
+  }
+
+  /// Sharp, fast, pale shards for a glass block breaking apart.
+  void shatter(Vector2 at) {
+    for (var i = 0; i < Cfg.glassShards; i++) {
+      final ang = _rng.nextDouble() * pi * 2;
+      final sp = 2.5 + _rng.nextDouble() * 6.0;
+      final vel = Vector2(cos(ang) * sp, sin(ang) * sp - 1.0);
+      final life = 0.3 + _rng.nextDouble() * 0.35;
+      _ps.add(_P(at.clone(), vel, life, life, Cfg.glassEdge));
+    }
+  }
+
   /// Feed the flying ball's position each frame (or null to end the trail).
   void trail(Vector2? p) {
     if (p == null) {

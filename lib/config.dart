@@ -11,6 +11,18 @@ class Cfg {
   // `cameraTarget` (responsive: same framing on any window size).
   static const double viewWorldWidth = 26;
   static Vector2 get cameraTarget => Vector2(2, 2);
+  // seconds the opening camera pan (frames the target, then eases home) takes
+  static const double introDuration = 0.85;
+
+  // victory: physics slows to this fraction for `winSlowmoTime` real seconds so
+  // you watch the last target fall, then the panel appears.
+  static const double winSlowmoScale = 0.35;
+  static const double winSlowmoTime = 0.6;
+
+  // screen flash (white overlay alpha, decays each frame)
+  static const double flashOnTarget = 0.22;
+  static const double flashOnWin = 0.5;
+  static const double flashDecay = 3.5;
 
   // ground
   static const double groundY = 6.0;
@@ -68,9 +80,44 @@ class Cfg {
   static const Color blockHighlight = Color(0x30FFFFFF);
   static const Color ballShine = Color(0x70FFFFFF);
   static const double blockRadius = 0.15;
+
+  // materials — wood is the baseline block* values above; stone is heavy and
+  // stubborn, glass is light and shatters when struck.
+  static const double stoneDensity = 3.4;
+  static const double stoneFriction = 0.72;
+  static const double glassDensity = 0.55;
+  static const double glassFriction = 0.2;
+  static const double glassRestitution = 0.1;
+  static const Color stoneColor = Color(0xFF8A93A6);
+  static const Color glassFill = Color(0x5CBFEFFF); // translucent
+  static const Color glassEdge = Color(0xCCE8FBFF);
+  static const int glassShards = 16;
+
+  // depth shading — a soft dark band along a block's base fakes 3D volume
+  static const Color blockShade = Color(0x22000000);
+
+  // arrow projectile
+  static const double arrowLength = 1.7;
+  static const Color arrowShaft = Color(0xFF8A5A2B);
+  static const Color arrowHead = Color(0xFFCFD8E3);
+  static const Color arrowFletch = Color(0xFFE24C4C);
+
+  // bow launcher (base + limbs + string)
+  static const Color baseWood = Color(0xFF6E4A28);
+  static const Color baseWoodDark = Color(0xFF48301A);
+  static const Color bowString = Color(0xCCE8EEF6);
+
+  // person-shaped targets (the body reuses targetColor)
+  static const Color personHead = Color(0xFFFFE0B0);
+  static const Color personFace = Color(0xFF5A3A1A);
+
   static final Paint aimDotPaint = Paint()..color = const Color(0xB3FFFFFF);
   static final Paint bandPaint = Paint()
     ..color = const Color(0xFFFFC46B)
     ..strokeWidth = 0.14
     ..style = PaintingStyle.stroke;
 }
+
+/// What a block is made of — changes how it looks, how heavy it is, and (for
+/// glass) whether it shatters when struck.
+enum BlockMaterial { wood, stone, glass }

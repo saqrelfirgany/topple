@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../audio.dart';
 import '../config.dart';
 import '../levels.dart';
 import '../save_store.dart';
@@ -85,7 +86,12 @@ class LevelSelectScreen extends StatelessWidget {
     final unlocked = store.isUnlocked(i);
     final s = store.stars(i);
     return GestureDetector(
-      onTap: unlocked ? () => onPick(i) : null,
+      onTap: unlocked
+          ? () {
+              Sfx.ui();
+              onPick(i);
+            }
+          : null,
       child: Container(
         decoration: BoxDecoration(
           color: unlocked ? const Color(0x1AFFFFFF) : const Color(0x0DFFFFFF),
@@ -131,7 +137,10 @@ class LevelSelectScreen extends StatelessWidget {
       );
 
   Widget _circleBtn(IconData icon, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          Sfx.ui();
+          onTap();
+        },
         child: Container(
           width: 42,
           height: 42,

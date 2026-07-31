@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../audio.dart';
 import '../config.dart';
 import '../levels.dart';
 import '../save_store.dart';
@@ -12,11 +13,13 @@ class MenuScreen extends StatelessWidget {
     required this.store,
     required this.onPlay,
     required this.onLevels,
+    required this.onReset,
   });
 
   final SaveStore store;
   final VoidCallback onPlay;
   final VoidCallback onLevels;
+  final VoidCallback onReset;
 
   @override
   Widget build(BuildContext context) {
@@ -64,6 +67,10 @@ class MenuScreen extends StatelessWidget {
                   'by Ahmed “Saqr” ElFirgany',
                   style: TextStyle(color: Color(0x66FFFFFF), fontSize: 12),
                 ),
+                if (started) ...[
+                  const SizedBox(height: 10),
+                  _ResetButton(onReset: onReset),
+                ],
               ],
             ),
           ),
@@ -75,7 +82,10 @@ class MenuScreen extends StatelessWidget {
   Widget _primary(String label, VoidCallback onTap) => SizedBox(
         width: 240,
         child: ElevatedButton(
-          onPressed: onTap,
+          onPressed: () {
+            Sfx.ui();
+            onTap();
+          },
           style: ElevatedButton.styleFrom(
             backgroundColor: Cfg.ballColor,
             foregroundColor: const Color(0xFF04101F),
@@ -94,7 +104,10 @@ class MenuScreen extends StatelessWidget {
   Widget _secondary(String label, VoidCallback onTap) => SizedBox(
         width: 240,
         child: OutlinedButton(
-          onPressed: onTap,
+          onPressed: () {
+            Sfx.ui();
+            onTap();
+          },
           style: OutlinedButton.styleFrom(
             foregroundColor: Colors.white,
             side: const BorderSide(color: Color(0x55FFFFFF)),
@@ -164,4 +177,41 @@ class _Logo extends StatelessWidget {
           shape: BoxShape.circle,
         ),
       );
+}
+
+/// A deliberately low-key "reset progress" control that asks for a second tap
+/// to confirm, so nobody wipes their stars by accident.
+class _ResetButton extends StatefulWidget {
+  const _ResetButton({required this.onReset});
+
+  final VoidCallback onReset;
+
+  @override
+  State<_ResetButton> createState() => _ResetButtonState();
+}
+
+class _ResetButtonState extends State<_ResetButton> {
+  bool _confirm = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () {
+        if (_confirm) {
+          widget.onReset();
+          setState(() => _confirm = false);
+        } else {
+          setState(() => _confirm = true);
+        }
+      },
+      style: TextButton.styleFrom(
+        foregroundColor:
+            _confirm ? const Color(0xFFFF8A8A) : const Color(0x66FFFFFF),
+      ),
+      child: Text(
+        _confirm ? 'Tap again to confirm reset' : 'Reset progress',
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
 }

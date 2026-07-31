@@ -5,10 +5,16 @@ import 'config.dart';
 /// One block placement: a world x, a row (0 = on the ground, up increases), and
 /// whether it's a target (the thing you must knock down to clear the level).
 class BlockSpec {
-  const BlockSpec(this.x, this.row, {this.target = false});
+  const BlockSpec(
+    this.x,
+    this.row, {
+    this.target = false,
+    this.material = BlockMaterial.wood,
+  });
   final double x;
   final int row;
   final bool target;
+  final BlockMaterial material;
 }
 
 class LevelDef {
@@ -97,13 +103,14 @@ final List<LevelDef> kLevels = [
       ],
     ],
   ),
-  // L7 — two short pillars (the targets) with a tall guard tower between them;
-  // arc over the guard or blast through it.
+  // L7 — two short pillars (the targets) flanking a heavy STONE guard tower;
+  // stone barely budges, so arc your shots over it onto the pillars.
   LevelDef(
     ammo: 4,
     blocks: [
       for (var r = 0; r < 3; r++) BlockSpec(4.4, r, target: r == 2),
-      for (var r = 0; r < 5; r++) BlockSpec(6.3, r),
+      for (var r = 0; r < 5; r++)
+        BlockSpec(6.3, r, material: BlockMaterial.stone),
       for (var r = 0; r < 3; r++) BlockSpec(8.2, r, target: r == 2),
     ],
   ),
@@ -130,6 +137,54 @@ final List<LevelDef> kLevels = [
       BlockSpec(6.06, 3, target: true),
       for (var r = 0; r < 4; r++) BlockSpec(9.4, r),
       BlockSpec(9.4, 4, target: true),
+    ],
+  ),
+  // L10 — a GLASS wall guards the target; smash straight through it, the shards
+  // scatter, and the shot carries on to the block behind.
+  LevelDef(
+    ammo: 5,
+    blocks: [
+      for (var r = 0; r < 4; r++) ...[
+        BlockSpec(5.6, r, material: BlockMaterial.glass),
+        BlockSpec(6.64, r, material: BlockMaterial.glass),
+      ],
+      for (var r = 0; r < 2; r++) BlockSpec(8.5, r),
+      BlockSpec(8.5, 2, target: true),
+    ],
+  ),
+  // L11 — two wood targets rising between stubby stone guards; clip their tops.
+  LevelDef(
+    ammo: 5,
+    blocks: [
+      BlockSpec(5.0, 0, material: BlockMaterial.stone),
+      BlockSpec(6.04, 0, target: true),
+      BlockSpec(6.04, 1, target: true),
+      BlockSpec(7.08, 0, material: BlockMaterial.stone),
+    ],
+  ),
+  // L12 — a tall glass tower crowned with a target; shatter its base and the
+  // whole thing comes down.
+  LevelDef(
+    ammo: 3,
+    blocks: [
+      for (var r = 0; r < 5; r++)
+        BlockSpec(6.2, r, material: BlockMaterial.glass),
+      BlockSpec(6.2, 5, target: true),
+    ],
+  ),
+  // L13 — the mix: stone footings, a glass midsection, two targets, and a glass
+  // screen down the middle. Everything you've learned in one.
+  LevelDef(
+    ammo: 6,
+    blocks: [
+      BlockSpec(4.6, 0, material: BlockMaterial.stone),
+      BlockSpec(4.6, 1, material: BlockMaterial.glass),
+      BlockSpec(4.6, 2, target: true),
+      BlockSpec(8.2, 0, material: BlockMaterial.stone),
+      BlockSpec(8.2, 1, material: BlockMaterial.glass),
+      BlockSpec(8.2, 2, target: true),
+      for (var r = 0; r < 3; r++)
+        BlockSpec(6.4, r, material: BlockMaterial.glass),
     ],
   ),
 ];

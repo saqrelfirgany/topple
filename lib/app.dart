@@ -35,6 +35,7 @@ class _ToppleAppState extends State<ToppleApp> {
         _level = i;
         _screen = _Screen.game;
       });
+  void _resetProgress() => setState(() => _store.reset());
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +45,7 @@ class _ToppleAppState extends State<ToppleApp> {
           store: _store,
           onPlay: () => _play(_store.continueLevel),
           onLevels: _goLevels,
+          onReset: _resetProgress,
         ),
       _Screen.levels => LevelSelectScreen(
           key: const ValueKey('levels'),
@@ -90,8 +92,11 @@ class _GameScreen extends StatefulWidget {
 class _GameScreenState extends State<_GameScreen> {
   late final ToppleGame _game = ToppleGame(
     startLevel: widget.startLevel,
-    onLevelResult: (i, stars) =>
-        widget.store.recordWin(i, stars, kLevels.length),
+    onLevelResult: (i, stars) {
+      final prev = widget.store.stars(i);
+      widget.store.recordWin(i, stars, kLevels.length);
+      return prev > 0 && stars > prev;
+    },
     onExit: widget.onExit,
   );
 
