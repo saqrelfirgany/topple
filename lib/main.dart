@@ -1,8 +1,22 @@
 import 'package:flame/game.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'game.dart';
+import 'hud.dart';
 
 void main() {
-  runApp(GameWidget(game: ToppleGame()));
+  runApp(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: GameWidget<ToppleGame>(
+          game: ToppleGame(),
+          overlayBuilderMap: {
+            'hud': (context, game) => ToppleHud(game),
+          },
+          initialActiveOverlays: const ['hud'],
+        ),
+      ),
+    ),
+  );
 }

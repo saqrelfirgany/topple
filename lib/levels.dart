@@ -1,0 +1,63 @@
+import 'package:flame_forge2d/flame_forge2d.dart';
+
+import 'config.dart';
+
+/// One block placement: a world x, a row (0 = on the ground, up increases), and
+/// whether it's a target (the thing you must knock down to clear the level).
+class BlockSpec {
+  const BlockSpec(this.x, this.row, {this.target = false});
+  final double x;
+  final int row;
+  final bool target;
+}
+
+class LevelDef {
+  const LevelDef({required this.ammo, required this.blocks});
+  final int ammo;
+  final List<BlockSpec> blocks;
+}
+
+/// World position for a spec's block, resting on the ground and stacked up.
+Vector2 blockPos(BlockSpec b) {
+  final baseY = Cfg.groundY - Cfg.blockH / 2;
+  final y = baseY - b.row * (Cfg.blockH + Cfg.blockGap);
+  return Vector2(b.x, y);
+}
+
+const double _c0 = 5.0;
+const double _c1 = 6.04; // one block + gap to the right
+const double _c2 = 7.08;
+
+/// Hand-made levels. Keep the tower to the right; the launch anchor is on the
+/// left. Each level names its targets and how many balls you get.
+final List<LevelDef> kLevels = [
+  // L1 — a 2-wide, 4-tall tower, the top row is the targets.
+  LevelDef(
+    ammo: 3,
+    blocks: [
+      for (var r = 0; r < 4; r++) ...[
+        BlockSpec(_c0, r, target: r == 3),
+        BlockSpec(_c1, r, target: r == 3),
+      ],
+    ],
+  ),
+  // L2 — two separate pillars, a target on top of each.
+  LevelDef(
+    ammo: 4,
+    blocks: [
+      for (var r = 0; r < 3; r++) BlockSpec(4.4, r, target: r == 2),
+      for (var r = 0; r < 3; r++) BlockSpec(8.2, r, target: r == 2),
+    ],
+  ),
+  // L3 — a 3-wide, 5-tall stack, targets tucked in the upper-right column.
+  LevelDef(
+    ammo: 4,
+    blocks: [
+      for (var r = 0; r < 5; r++) ...[
+        BlockSpec(_c0, r),
+        BlockSpec(_c1, r, target: r >= 3),
+        BlockSpec(_c2, r),
+      ],
+    ],
+  ),
+];
