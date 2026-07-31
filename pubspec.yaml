@@ -1,0 +1,22 @@
+name: topple
+description: A 2D slingshot knock-down physics game in Flutter (Flame + Forge2D). By Ahmed "Saqr" ElFirgany.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+  flutter: '>=3.22.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flame: ^1.38.0
+  flame_forge2d: ^0.19.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
