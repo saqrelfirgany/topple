@@ -5,7 +5,7 @@ import '../config.dart';
 import '../levels.dart';
 import '../save_store.dart';
 
-/// Title screen: a little stacked-block logo, the game name, and the two ways
+/// Title screen: a little bow-and-tower logo, the game name, and the two ways
 /// in — Continue/Play (drops into the next sensible level) and Select Level.
 class MenuScreen extends StatelessWidget {
   const MenuScreen({
@@ -53,7 +53,7 @@ class MenuScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Fling. Topple. Clear the orange.',
+                  'Aim the bow. Topple the targets.',
                   style: TextStyle(color: Color(0xB3FFFFFF), fontSize: 15),
                 ),
                 const SizedBox(height: 40),
@@ -146,15 +146,25 @@ class _Logo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 150,
-      height: 100,
+      width: 168,
+      height: 104,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          Positioned(left: 42, bottom: 0, child: _block(Cfg.blockColor)),
-          Positioned(left: 86, bottom: 0, child: _block(Cfg.blockColor)),
-          Positioned(left: 64, bottom: 42, child: _block(Cfg.targetColor)),
-          Positioned(left: 6, bottom: 14, child: _ball()),
+          // the tower on the right, with a little character standing on top
+          Positioned(left: 118, bottom: 0, child: _block(Cfg.stoneColor)),
+          Positioned(left: 118, bottom: 42, child: _block(Cfg.blockColor)),
+          Positioned(left: 127, bottom: 84, child: _head()),
+          // the bow with a nocked arrow, aimed at it
+          const Positioned(
+            left: 0,
+            bottom: 0,
+            top: 0,
+            child: SizedBox(
+              width: 112,
+              child: CustomPaint(painter: _BowPainter()),
+            ),
+          ),
         ],
       ),
     );
@@ -169,14 +179,104 @@ class _Logo extends StatelessWidget {
         ),
       );
 
-  Widget _ball() => Container(
-        width: 30,
-        height: 30,
+  Widget _head() => Container(
+        width: 22,
+        height: 22,
+        alignment: Alignment.center,
         decoration: const BoxDecoration(
-          color: Cfg.ballColor,
+          color: Cfg.personHead,
+          shape: BoxShape.circle,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [_eye(), const SizedBox(width: 5), _eye()],
+        ),
+      );
+
+  Widget _eye() => Container(
+        width: 4,
+        height: 4,
+        decoration: const BoxDecoration(
+          color: Cfg.personFace,
           shape: BoxShape.circle,
         ),
       );
+}
+
+/// The menu's bow: two limbs curving away from the target, a string pulled back
+/// to the nock, and the arrow sitting on it ready to go.
+class _BowPainter extends CustomPainter {
+  const _BowPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final spine = w * 0.46; // where the bow sits
+    final line = h * 0.55; // the arrow's height
+
+    final top = Offset(spine, h * 0.10);
+    final bottom = Offset(spine, h * 0.94);
+    final nock = Offset(spine + w * 0.13, line);
+
+    // limbs
+    canvas.drawPath(
+      Path()
+        ..moveTo(top.dx, top.dy)
+        ..quadraticBezierTo(spine - w * 0.30, line, bottom.dx, bottom.dy),
+      Paint()
+        ..color = Cfg.baseWood
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // string, drawn back to the nock
+    canvas.drawPath(
+      Path()
+        ..moveTo(top.dx, top.dy)
+        ..lineTo(nock.dx, nock.dy)
+        ..lineTo(bottom.dx, bottom.dy),
+      Paint()
+        ..color = Cfg.bowString
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+
+    // shaft
+    final tip = Offset(w * 0.88, line);
+    canvas.drawLine(
+      nock,
+      tip,
+      Paint()
+        ..color = Cfg.arrowShaft
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round,
+    );
+
+    // head
+    canvas.drawPath(
+      Path()
+        ..moveTo(tip.dx + 9, line)
+        ..lineTo(tip.dx - 3, line - 6)
+        ..lineTo(tip.dx - 3, line + 6)
+        ..close(),
+      Paint()..color = Cfg.arrowHead,
+    );
+
+    // fletching
+    canvas.drawPath(
+      Path()
+        ..moveTo(nock.dx - 1, line)
+        ..lineTo(nock.dx + 11, line - 7)
+        ..lineTo(nock.dx + 11, line + 7)
+        ..close(),
+      Paint()..color = Cfg.arrowFletch,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 /// A deliberately low-key "reset progress" control that asks for a second tap

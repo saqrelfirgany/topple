@@ -1,6 +1,6 @@
 # CLAUDE.md — Topple
 
-2D slingshot knock-down physics game. Flutter + Flame ^1.38 + flame_forge2d ^0.19.3 (Box2D). Saqr's original work — commit as himself, **no AI co-author trailer**. Part of the `games/` studio (sibling of `flutter-scene-runner`); reuse patterns from there and the reference in `../knowledge/`.
+2D bow-and-arrow knock-down physics game. Flutter + Flame ^1.38 + flame_forge2d ^0.19.3 (Box2D). Saqr's original work — commit as himself, **no AI co-author trailer**. Part of the `games/` studio (sibling of `flutter-scene-runner`); reuse patterns from there and the reference in `../knowledge/`.
 
 ## Conventions
 

@@ -50,7 +50,7 @@ class ToppleHud extends StatelessWidget {
                       _chip(
                           'TARGETS ${s.targets - s.targetsLeft}/${s.targets}'),
                       const SizedBox(width: 8),
-                      _chip('BALLS ${s.shotsLeft}'),
+                      _chip('ARROWS ${s.shotsLeft}'),
                     ],
                   ),
                 ),
@@ -61,11 +61,10 @@ class ToppleHud extends StatelessWidget {
               bottom: 16,
               right: 16,
               child: _roundButton(
-                child: Center(
-                  child: Text(
-                    s.muted ? '🔇' : '🔊',
-                    style: const TextStyle(fontSize: 19),
-                  ),
+                child: Icon(
+                  s.muted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                  color: Colors.white,
+                  size: 20,
                 ),
                 onTap: game.toggleMute,
               ),
@@ -221,8 +220,13 @@ class ToppleHud extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(s.muted ? '🔇' : '🔊',
-                        style: const TextStyle(fontSize: 16)),
+                    Icon(
+                      s.muted
+                          ? Icons.volume_off_rounded
+                          : Icons.volume_up_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       s.muted ? 'Sound off' : 'Sound on',
@@ -242,7 +246,7 @@ class ToppleHud extends StatelessWidget {
     final won = s.phase == Phase.won;
     final last = game.isLastLevel;
     final title =
-        won ? (last ? 'All Cleared!' : 'Level Complete') : 'Out of Balls';
+        won ? (last ? 'All Cleared!' : 'Level Complete') : 'Out of Arrows';
     final subtitle = won
         ? (last ? 'You toppled every level.' : 'Nice shot.')
         : 'So close — try again.';
@@ -284,13 +288,21 @@ class ToppleHud extends StatelessWidget {
             ),
             if (won) ...[
               const SizedBox(height: 10),
-              Text(
-                '★' * s.stars + '☆' * (3 - s.stars),
-                style: const TextStyle(
-                  color: Cfg.targetColor,
-                  fontSize: 34,
-                  letterSpacing: 4,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (var i = 0; i < 3; i++)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Icon(
+                        i < s.stars
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: Cfg.targetColor,
+                        size: 38,
+                      ),
+                    ),
+                ],
               ),
             ],
             if (won && s.newBest) ...[

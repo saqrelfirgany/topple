@@ -1,5 +1,5 @@
 name: topple
-description: A 2D slingshot knock-down physics game in Flutter (Flame + Forge2D). By Ahmed "Saqr" ElFirgany.
+description: A 2D bow-and-arrow knock-down physics game in Flutter (Flame + Forge2D). By Ahmed "Saqr" ElFirgany.
 publish_to: 'none'
 version: 0.1.0
 

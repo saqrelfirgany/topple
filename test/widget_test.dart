@@ -1,30 +1,43 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Level data is the part of this game that is pure and cheap to check.
+// A level with no targets can never be cleared and a level with no ammo can
+// never be tried, and both of those fail silently in play — you just sit there
+// wondering what you are doing wrong. So they are asserted here instead.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:topple/main.dart';
+import 'package:topple/levels.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('there are 13 levels, which is 39 stars', () {
+    expect(kLevels.length, 13);
+    expect(kLevels.length * 3, 39);
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  test('every level can actually be cleared', () {
+    for (var i = 0; i < kLevels.length; i++) {
+      final level = kLevels[i];
+      final targets = level.blocks.where((b) => b.target).length;
+      expect(targets, greaterThan(0), reason: 'level ${i + 1} has no targets');
+      expect(level.ammo, greaterThan(0), reason: 'level ${i + 1} has no arrows');
+    }
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('no block starts below the ground', () {
+    for (var i = 0; i < kLevels.length; i++) {
+      for (final b in kLevels[i].blocks) {
+        expect(b.row, greaterThanOrEqualTo(0),
+            reason: 'level ${i + 1} has a block under the floor');
+      }
+    }
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  test('no two blocks start inside each other', () {
+    for (var i = 0; i < kLevels.length; i++) {
+      final seen = <String>{};
+      for (final b in kLevels[i].blocks) {
+        final cell = '${b.x.toStringAsFixed(2)}@${b.row}';
+        expect(seen.add(cell), isTrue,
+            reason: 'level ${i + 1} stacks two blocks at $cell');
+      }
+    }
   });
 }

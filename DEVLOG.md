@@ -1,6 +1,6 @@
 # Devlog — Topple
 
-Building a 2D slingshot knock-down physics game in Flutter (Flame + Forge2D), in public. One entry per development stage — each stage is also a post.
+Building a 2D bow-and-arrow knock-down physics game in Flutter (Flame + Forge2D), in public. One entry per development stage — each stage is also a post.
 
 ## Day 1 — the first physics loop (2026-07-31)
 
@@ -62,5 +62,26 @@ The "make it excellent" pass:
 - **Pause overlay** (resume / restart / levels / sound) and **reset-progress** in the menu.
 - **13 levels** now, mixing wood, stone and glass.
 - **Web presentation** — branded title, favicon and app icons, a dark loading screen (no white flash), and a link-preview image so the deployed link looks sharp when it's shared.
+
+## Day 7 — the reskin: a bow, an arrow, and someone to knock down (2026-07-31)
+
+Same physics engine, a different game to look at. This was the day it stopped looking like a tech demo:
+
+- **The ball became an arrow** — a real shaft with a head and fletching that rotates to face the way it is flying, so a shot reads as a shot.
+- **The slingshot became a bow** — wooden limbs planted on a base, with a string that draws back as you pull.
+- **The orange blocks became characters** — little figures standing on the towers, so knocking one down actually means something.
+- **Blocks got depth** — a soft shade band along the base fakes volume, so a flat stack reads as a wall.
+- **It survives a hostile browser** — if local storage is blocked the game falls back to memory instead of hanging, and any startup error now prints on screen instead of spinning forever.
+
+## Day 8 — the launch check (2026-08-01)
+
+Before promoting the game anywhere I played the live build the way a stranger would, and found the things I had stopped seeing:
+
+- **The reward screen was broken.** The star rating was drawn with the text characters ★ and ☆. The web font does not carry them, so the moment you cleared a level the game showed you three empty boxes. The mute button had the same problem with its emoji. Both are Material icons now — the same ones the level select was already using correctly.
+- **The HUD still said BALLS**, two days after the ball became an arrow. It reads ARROWS now, and running out is *Out of Arrows*.
+- **The title screen still said "Fling. Topple. Clear the orange."** next to a ball logo. It is a bow aimed at a tower now, and the line is *aim the bow, topple the targets* — the same words as the link preview.
+- Added `deploy.sh`, so refreshing the live build is one command instead of five.
+
+None of this touched the physics. All of it touched the first thirty seconds, which is the only part most people ever see.
 
 Clips: `../showcase/topple/day1-first-run.mov`, `../showcase/topple/day2-real-game.mov`
